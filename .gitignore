@@ -8,6 +8,7 @@ Makefile.in
 Makefile.msc
 aclocal.m4
 autom4te.cache
+config.h
 config.h.in
 config.guess
 config.log
@@ -16,3 +17,5 @@ config.sub
 configure
 depcomp
 install-sh
+stamp-h1
+src/clutterpad
