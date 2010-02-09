@@ -62,7 +62,6 @@ on_touch (ClutterStage *stage, ClutterEvent *event, gpointer data)
 	clutter_actor_set_position (ctx->blob,
 		(gint) x - BLOB_SIZE / 2, (gint) y - BLOB_SIZE / 2);
 	clutter_container_add_actor (CLUTTER_CONTAINER (stage), ctx->blob);
-	clutter_actor_set_reactive (ctx->blob, TRUE);
 	clutter_actor_show (ctx->blob);
 
 	g_signal_connect (clutter_actor_get_stage (ctx->blob),
