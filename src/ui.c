@@ -124,6 +124,8 @@ ui_cleanup (ui_thread_t *ui)
 {
 	if (ui->stage_color)
 		clutter_color_free (ui->stage_color);
+	if (ui->queue)
+		g_async_queue_unref (ui->queue);
 	free (ui);
 	return;
 }
