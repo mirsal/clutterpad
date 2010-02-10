@@ -34,8 +34,8 @@
 int
 main (int argc, char** argv)
 {
-	ui_thread_t *ui = NULL;
-	midi_thread_t *midi = NULL;
+	ui_t *ui = NULL;
+	midi_t *midi = NULL;
 	GThread *midi_thread = NULL;
 	GAsyncQueue *queue = NULL;
 

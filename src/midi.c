@@ -31,14 +31,14 @@
 #include <malloc.h>
 #include <glib.h>
 
-struct _midi_thread {
+struct _midi {
 	GAsyncQueue *queue;
 };
 
-midi_thread_t*
+midi_t*
 midi_init (GAsyncQueue *queue)
 {
-	midi_thread_t *midi = calloc (1, sizeof (midi_thread_t));
+	midi_t *midi = calloc (1, sizeof (midi_t));
 	
 	if (!midi) return NULL;
 	midi->queue = g_async_queue_ref (queue);
@@ -47,7 +47,7 @@ midi_init (GAsyncQueue *queue)
 }
 
 void
-midi_cleanup (midi_thread_t *midi)
+midi_cleanup (midi_t *midi)
 {
 	if (midi->queue)
 		g_async_queue_unref (midi->queue);
@@ -58,7 +58,7 @@ midi_cleanup (midi_thread_t *midi)
 gpointer
 midi_run (gpointer data)
 {
-	midi_thread_t *midi = (midi_thread_t*) data;
+	midi_t *midi = (midi_t*) data;
 	printf ("sink thread running \n");
 
 	for(;;) {

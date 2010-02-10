@@ -30,11 +30,11 @@
 
 #include <glib.h> 
 
-struct _midi_thread;
-typedef struct _midi_thread midi_thread_t;
+struct _midi;
+typedef struct _midi midi_t;
 
-midi_thread_t* midi_init(GAsyncQueue *queue);
+midi_t* midi_init(GAsyncQueue *queue);
 gpointer midi_run(gpointer data);
-void midi_cleanup (midi_thread_t *midi);
+void midi_cleanup (midi_t *midi);
 
 #endif // __MIDI_H_

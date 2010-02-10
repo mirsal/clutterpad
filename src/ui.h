@@ -1,5 +1,5 @@
 /*****************************************************************************
- * ui.h
+ * ui.h: User interface
  *****************************************************************************
  * Copyright © 2010 Mirsal Ennaime
  * $Id$
@@ -30,11 +30,11 @@
 
 #include <glib.h> 
 
-struct _ui_thread;
-typedef struct _ui_thread ui_thread_t;
+struct _ui;
+typedef struct _ui ui_t;
 
-ui_thread_t* ui_init(GAsyncQueue *queue, int *argc, char ***argv);
-void ui_run(ui_thread_t *ui);
-void ui_cleanup (ui_thread_t *ui);
+ui_t* ui_init(GAsyncQueue *queue, int *argc, char ***argv);
+void ui_run(ui_t *ui);
+void ui_cleanup (ui_t *ui);
 
 #endif

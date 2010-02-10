@@ -33,7 +33,7 @@
 
 #define BLOB_SIZE 50
 
-struct _ui_thread {
+struct _ui {
 	GAsyncQueue *queue;
 	ClutterActor *stage;
 	ClutterColor *stage_color;
@@ -41,7 +41,7 @@ struct _ui_thread {
 
 typedef struct {
 	ClutterActor* blob;
-	ui_thread_t *ui;
+	ui_t *ui;
 } ctx_t;
 
 static gboolean on_touch(ClutterStage*, ClutterEvent*, gpointer);
@@ -57,7 +57,7 @@ on_touch (ClutterStage *stage, ClutterEvent *event, gpointer data)
 
 	clutter_event_get_coords (event, &x, &y);
 	
-	ctx->ui = (ui_thread_t*) data;
+	ctx->ui = (ui_t*) data;
 	ctx->blob = clutter_rectangle_new_with_color (&blob_color);
 	clutter_actor_set_size (ctx->blob, BLOB_SIZE, BLOB_SIZE);
 	clutter_actor_set_position (ctx->blob,
@@ -104,11 +104,11 @@ on_release (ClutterStage *stage, ClutterEvent *event, gpointer data)
 
 #undef disconnect
 
-ui_thread_t*
+ui_t*
 ui_init (GAsyncQueue *queue, int *argc, char ***argv)
 {
 	ClutterColor stage_color = { 0x00, 0x00, 0x00, 0xff };
-	ui_thread_t *ui = calloc (1, sizeof (ui_thread_t));
+	ui_t *ui = calloc (1, sizeof (ui_t));
 	
 	if (!ui) return NULL;
 	
@@ -120,7 +120,7 @@ ui_init (GAsyncQueue *queue, int *argc, char ***argv)
 }
 
 void
-ui_cleanup (ui_thread_t *ui)
+ui_cleanup (ui_t *ui)
 {
 	if (ui->stage_color)
 		clutter_color_free (ui->stage_color);
@@ -131,7 +131,7 @@ ui_cleanup (ui_thread_t *ui)
 }
 
 void
-ui_run (ui_thread_t *ui)
+ui_run (ui_t *ui)
 {
 	ui->stage = clutter_stage_get_default ();
 	clutter_actor_set_size (ui->stage, 800, 600);
