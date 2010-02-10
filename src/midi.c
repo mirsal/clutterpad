@@ -1,5 +1,5 @@
 /*****************************************************************************
- * ui.h
+ * midi.c
  *****************************************************************************
  * Copyright © 2010 Mirsal Ennaime
  * $Id$
@@ -21,20 +21,49 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#ifndef __UI_H_
-#define __UI_H_
-
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#include <glib.h> 
+#include "midi.h"
 
-struct _ui_thread;
-typedef struct _ui_thread ui_thread_t;
+#include <stdio.h>
+#include <malloc.h>
+#include <glib.h>
 
-ui_thread_t* ui_init(GAsyncQueue *queue, int *argc, char ***argv);
-void ui_run(ui_thread_t *ui);
-void ui_cleanup (ui_thread_t *ui);
+struct _midi_thread {
+	GAsyncQueue *queue;
+};
 
-#endif
+midi_thread_t*
+midi_init (GAsyncQueue *queue)
+{
+	midi_thread_t *midi = calloc (1, sizeof (midi_thread_t));
+	
+	if (!midi) return NULL;
+	midi->queue = g_async_queue_ref (queue);
+	
+	return midi;
+}
+
+void
+midi_cleanup (midi_thread_t *midi)
+{
+	if (midi->queue)
+		g_async_queue_unref (midi->queue);
+	free (midi);
+	return;
+}
+
+gpointer
+midi_run (gpointer data)
+{
+	midi_thread_t *midi = (midi_thread_t*) data;
+	printf ("sink thread running \n");
+
+	for(;;) {
+		g_async_queue_pop (midi->queue);
+		printf ("Got a message !");
+	}
+	return NULL;
+}

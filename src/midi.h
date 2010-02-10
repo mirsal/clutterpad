@@ -1,5 +1,5 @@
 /*****************************************************************************
- * ui.h
+ * midi.h
  *****************************************************************************
  * Copyright © 2010 Mirsal Ennaime
  * $Id$
@@ -21,8 +21,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#ifndef __UI_H_
-#define __UI_H_
+#ifndef __MIDI_H_
+#define __MIDI_H_
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -30,11 +30,11 @@
 
 #include <glib.h> 
 
-struct _ui_thread;
-typedef struct _ui_thread ui_thread_t;
+struct _midi_thread;
+typedef struct _midi_thread midi_thread_t;
 
-ui_thread_t* ui_init(GAsyncQueue *queue, int *argc, char ***argv);
-void ui_run(ui_thread_t *ui);
-void ui_cleanup (ui_thread_t *ui);
+midi_thread_t* midi_init(GAsyncQueue *queue);
+gpointer midi_run(gpointer data);
+void midi_cleanup (midi_thread_t *midi);
 
-#endif
+#endif // __MIDI_H_

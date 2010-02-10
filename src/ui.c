@@ -34,6 +34,7 @@
 #define BLOB_SIZE 50
 
 struct _ui_thread {
+	GAsyncQueue *queue;
 	ClutterActor *stage;
 	ClutterColor *stage_color;
 };
@@ -69,6 +70,8 @@ on_touch (ClutterStage *stage, ClutterEvent *event, gpointer data)
 	g_signal_connect (clutter_actor_get_stage (ctx->blob),
 		"button-release-event", G_CALLBACK (on_release), ctx);
 
+	g_async_queue_push (ctx->ui->queue, 42);
+
 	return TRUE;
 }
 
@@ -102,7 +105,7 @@ on_release (ClutterStage *stage, ClutterEvent *event, gpointer data)
 #undef disconnect
 
 ui_thread_t*
-ui_init (int *argc, char ***argv)
+ui_init (GAsyncQueue *queue, int *argc, char ***argv)
 {
 	ClutterColor stage_color = { 0x00, 0x00, 0x00, 0xff };
 	ui_thread_t *ui = calloc (1, sizeof (ui_thread_t));
@@ -112,6 +115,7 @@ ui_init (int *argc, char ***argv)
 	clutter_threads_init ();
 	clutter_init (argc, argv);
 	ui->stage_color = clutter_color_copy (&stage_color); 
+	ui->queue = g_async_queue_ref (queue);
 	return ui;
 }
 
