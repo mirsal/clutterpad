@@ -70,8 +70,6 @@ on_touch (ClutterStage *stage, ClutterEvent *event, gpointer data)
 	g_signal_connect (clutter_actor_get_stage (ctx->blob),
 		"button-release-event", G_CALLBACK (on_release), ctx);
 
-	g_async_queue_push (ctx->ui->queue, 42);
-
 	return TRUE;
 }
 
@@ -142,5 +140,6 @@ ui_run (ui_t *ui)
 
 	clutter_actor_show (ui->stage);
 	clutter_main ();
+	send_shutdown_control (ui->queue);
 	return;
 }

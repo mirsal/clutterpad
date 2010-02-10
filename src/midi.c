@@ -26,6 +26,7 @@
 #endif
 
 #include "midi.h"
+#include "message.h"
 
 #include <stdio.h>
 #include <malloc.h>
@@ -33,7 +34,11 @@
 
 struct _midi {
 	GAsyncQueue *queue;
+	gboolean die;
 };
+
+static void handle_control_msg (midi_t *midi, message_t *msg);
+static void handle_event_msg (midi_t *midi, message_t *msg);
 
 midi_t*
 midi_init (GAsyncQueue *queue)
@@ -42,6 +47,7 @@ midi_init (GAsyncQueue *queue)
 	
 	if (!midi) return NULL;
 	midi->queue = g_async_queue_ref (queue);
+	midi->die = FALSE;
 	
 	return midi;
 }
@@ -58,12 +64,45 @@ midi_cleanup (midi_t *midi)
 gpointer
 midi_run (gpointer data)
 {
+	message_t *msg = NULL;
 	midi_t *midi = (midi_t*) data;
+
 	printf ("sink thread running \n");
 
 	for(;;) {
-		g_async_queue_pop (midi->queue);
-		printf ("Got a message !");
+		msg = (message_t*) g_async_queue_pop (midi->queue);
+
+		switch (msg->type) {
+			case MSG_TYPE_CONTROL:
+				handle_control_msg (midi, msg);
+				break;
+			case MSG_TYPE_EVENT:
+				handle_event_msg (midi, msg);
+				break;
+		}
+
+		message_decref (msg);
+		if (midi->die) break;
 	}
+
+	printf ("sink thread shutting down \n");
 	return NULL;
+}
+
+static void
+handle_control_msg (midi_t *midi, message_t *msg)
+{
+	control_message_t *cm = (control_message_t*) msg->data;
+	printf ("Got a control msg: action %d \n", cm->action);
+	switch (cm->action) {
+		case CONTROL_ACTION_SHUTDOWN:
+			midi->die = TRUE;
+			return;
+	}
+}
+
+static void
+handle_event_msg (midi_t *midi, message_t *msg)
+{
+	return;
 }
