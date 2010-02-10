@@ -29,7 +29,6 @@
 #include "message.h"
 
 #include <stdio.h>
-#include <malloc.h>
 #include <glib.h>
 
 struct _midi {
@@ -43,7 +42,7 @@ static void handle_event_msg (midi_t *midi, message_t *msg);
 midi_t*
 midi_init (GAsyncQueue *queue)
 {
-	midi_t *midi = calloc (1, sizeof (midi_t));
+	midi_t *midi = g_malloc0 (sizeof (midi_t));
 	
 	if (!midi) return NULL;
 	midi->queue = g_async_queue_ref (queue);
@@ -57,7 +56,7 @@ midi_cleanup (midi_t *midi)
 {
 	if (midi->queue)
 		g_async_queue_unref (midi->queue);
-	free (midi);
+	g_free (midi);
 	return;
 }
 

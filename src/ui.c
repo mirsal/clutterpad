@@ -28,7 +28,6 @@
 #include "ui.h"
 
 #include <stdio.h>
-#include <malloc.h>
 #include <clutter/clutter.h>
 
 #define BLOB_SIZE 50
@@ -52,7 +51,7 @@ static gboolean
 on_touch (ClutterStage *stage, ClutterEvent *event, gpointer data)
 {
 	gfloat x = 0, y = 0;
-	ctx_t *ctx = calloc (1, sizeof (ctx_t));
+	ctx_t *ctx = g_malloc0 (sizeof (ctx_t));
 	ClutterColor blob_color = { 0xff, 0x00, 0x00, 0xff };
 
 	clutter_event_get_coords (event, &x, &y);
@@ -96,7 +95,7 @@ on_release (ClutterStage *stage, ClutterEvent *event, gpointer data)
 	disconnect (ctx, on_move);
 	disconnect (ctx, on_release);
 	clutter_actor_destroy (ctx->blob);
-	free(ctx);
+	g_free(ctx);
 	return TRUE;
 }
 
@@ -106,7 +105,7 @@ ui_t*
 ui_init (GAsyncQueue *queue, int *argc, char ***argv)
 {
 	ClutterColor stage_color = { 0x00, 0x00, 0x00, 0xff };
-	ui_t *ui = calloc (1, sizeof (ui_t));
+	ui_t *ui = g_malloc0 (sizeof (ui_t));
 	
 	if (!ui) return NULL;
 	
@@ -124,7 +123,7 @@ ui_cleanup (ui_t *ui)
 		clutter_color_free (ui->stage_color);
 	if (ui->queue)
 		g_async_queue_unref (ui->queue);
-	free (ui);
+	g_free (ui);
 	return;
 }
 
