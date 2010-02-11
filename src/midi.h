@@ -28,13 +28,27 @@
 # include <config.h>
 #endif
 
+#include "message.h"
+
 #include <glib.h> 
 
 struct _midi;
 typedef struct _midi midi_t;
 
+typedef void (*msg_handler_func) (gpointer msg, gpointer data);
+
 midi_t* midi_init(GAsyncQueue *queue);
 gpointer midi_run(gpointer data);
 void midi_cleanup (midi_t *midi);
+
+void midi_register_control_msg_handler (midi_t *midi,
+	control_action_t action,
+	msg_handler_func func,
+	gpointer data);
+
+void midi_register_event_msg_handler (midi_t *midi,
+	event_type_t event_type,
+	msg_handler_func func,
+	gpointer data);
 
 #endif // __MIDI_H_

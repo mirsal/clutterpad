@@ -1,5 +1,5 @@
 /*****************************************************************************
- * midi.c
+ * midi.c: Midi subsystem
  *****************************************************************************
  * Copyright © 2010 Mirsal Ennaime
  * $Id$
@@ -33,11 +33,20 @@
 
 struct _midi {
 	GAsyncQueue *queue;
+	GHashTable *control_handlers;
+	GHashTable *event_handlers;
 	gboolean die;
 };
 
+typedef struct {
+	msg_handler_func func;
+	gpointer data;
+} msg_handler_t;
+
 static void handle_control_msg (midi_t *midi, message_t *msg);
 static void handle_event_msg (midi_t *midi, message_t *msg);
+
+static void shutdown (gpointer msg, gpointer data);
 
 midi_t*
 midi_init (GAsyncQueue *queue)
@@ -45,9 +54,17 @@ midi_init (GAsyncQueue *queue)
 	midi_t *midi = g_malloc0 (sizeof (midi_t));
 	
 	if (!midi) return NULL;
+
 	midi->queue = g_async_queue_ref (queue);
+	midi->control_handlers =
+		g_hash_table_new_full (g_int_hash, g_int_equal, g_free, g_free);
+	midi->event_handlers =
+		g_hash_table_new_full (g_int_hash, g_int_equal, g_free, g_free);
 	midi->die = FALSE;
-	
+
+	midi_register_control_msg_handler (midi,
+		CONTROL_ACTION_SHUTDOWN, shutdown, midi);
+
 	return midi;
 }
 
@@ -56,6 +73,13 @@ midi_cleanup (midi_t *midi)
 {
 	if (midi->queue)
 		g_async_queue_unref (midi->queue);
+
+	if (midi->control_handlers)
+		g_hash_table_destroy (midi->control_handlers);
+
+	if (midi->event_handlers)
+		g_hash_table_destroy (midi->event_handlers);
+
 	g_free (midi);
 	return;
 }
@@ -89,15 +113,38 @@ midi_run (gpointer data)
 }
 
 static void
+shutdown (gpointer msg, gpointer data)
+{
+	(void) msg;
+	midi_t* midi = (midi_t*) data;
+	midi->die = TRUE;
+}
+
+void
+midi_register_control_msg_handler (midi_t *midi,
+	control_action_t action, msg_handler_func func, gpointer data)
+{
+	gint *key = g_malloc0 (sizeof (gint));
+	msg_handler_t* handler = g_malloc0 (sizeof (msg_handler_t));
+	handler->func = func;
+	handler->data = data;
+
+	*key = action;
+
+	g_hash_table_insert (midi->control_handlers, key, handler);
+}
+
+static void
 handle_control_msg (midi_t *midi, message_t *msg)
 {
+	msg_handler_t *handler = NULL;
 	control_message_t *cm = (control_message_t*) msg->data;
 	printf ("Got a control msg: action %d \n", cm->action);
-	switch (cm->action) {
-		case CONTROL_ACTION_SHUTDOWN:
-			midi->die = TRUE;
-			return;
-	}
+
+	handler = g_hash_table_lookup (midi->control_handlers, &cm->action);
+
+	if (handler)
+		handler->func (cm, handler->data);
 }
 
 static void
