@@ -1,5 +1,5 @@
 /*****************************************************************************
- * midi.c: Midi subsystem
+ * sink.c: Event sink
  *****************************************************************************
  * Copyright © 2010 Mirsal Ennaime
  * $Id$
@@ -25,13 +25,13 @@
 # include <config.h>
 #endif
 
-#include "midi.h"
+#include "sink.h"
 #include "message.h"
 
 #include <stdio.h>
 #include <glib.h>
 
-struct _midi {
+struct _sink {
 	GAsyncQueue *queue;
 	GHashTable *control_handlers;
 	GHashTable *event_handlers;
@@ -43,69 +43,69 @@ typedef struct {
 	gpointer data;
 } msg_handler_t;
 
-static void handle_control_msg (midi_t *midi, message_t *msg);
-static void handle_event_msg (midi_t *midi, message_t *msg);
+static void handle_control_msg (sink_t *sink, message_t *msg);
+static void handle_event_msg (sink_t *sink, message_t *msg);
 
 static void shutdown (gpointer msg, gpointer data);
 
-midi_t*
-midi_init (GAsyncQueue *queue)
+sink_t*
+sink_init (GAsyncQueue *queue)
 {
-	midi_t *midi = g_malloc0 (sizeof (midi_t));
+	sink_t *sink = g_malloc0 (sizeof (sink_t));
 	
-	if (!midi) return NULL;
+	if (!sink) return NULL;
 
-	midi->queue = g_async_queue_ref (queue);
-	midi->control_handlers =
+	sink->queue = g_async_queue_ref (queue);
+	sink->control_handlers =
 		g_hash_table_new_full (g_int_hash, g_int_equal, g_free, g_free);
-	midi->event_handlers =
+	sink->event_handlers =
 		g_hash_table_new_full (g_int_hash, g_int_equal, g_free, g_free);
-	midi->die = FALSE;
+	sink->die = FALSE;
 
-	midi_register_control_msg_handler (midi,
-		CONTROL_ACTION_SHUTDOWN, shutdown, midi);
+	sink_register_control_msg_handler (sink,
+		CONTROL_ACTION_SHUTDOWN, shutdown, sink);
 
-	return midi;
+	return sink;
 }
 
 void
-midi_cleanup (midi_t *midi)
+sink_cleanup (sink_t *sink)
 {
-	if (midi->queue)
-		g_async_queue_unref (midi->queue);
+	if (sink->queue)
+		g_async_queue_unref (sink->queue);
 
-	if (midi->control_handlers)
-		g_hash_table_destroy (midi->control_handlers);
+	if (sink->control_handlers)
+		g_hash_table_destroy (sink->control_handlers);
 
-	if (midi->event_handlers)
-		g_hash_table_destroy (midi->event_handlers);
+	if (sink->event_handlers)
+		g_hash_table_destroy (sink->event_handlers);
 
-	g_free (midi);
+	g_free (sink);
 	return;
 }
 
 gpointer
-midi_run (gpointer data)
+sink_run (gpointer data)
 {
 	message_t *msg = NULL;
-	midi_t *midi = (midi_t*) data;
+	sink_t *sink = (sink_t*) data;
 
 	printf ("sink thread running \n");
 
 	for(;;) {
-		msg = (message_t*) g_async_queue_pop (midi->queue);
+		msg = (message_t*) g_async_queue_pop (sink->queue);
 
 		switch (msg->type) {
 			case MSG_TYPE_CONTROL:
-				handle_control_msg (midi, msg);
+				handle_control_msg (sink, msg);
 				break;
 			case MSG_TYPE_EVENT:
-				handle_event_msg (midi, msg);
+				handle_event_msg (sink, msg);
 				break;
 		}
 
 		message_decref (msg);
-		if (midi->die) break;
+		if (sink->die) break;
 	}
 
 	printf ("sink thread shutting down \n");
@@ -116,12 +116,12 @@ static void
 shutdown (gpointer msg, gpointer data)
 {
 	(void) msg;
-	midi_t* midi = (midi_t*) data;
-	midi->die = TRUE;
+	sink_t* sink = (sink_t*) data;
+	sink->die = TRUE;
 }
 
 void
-midi_register_control_msg_handler (midi_t *midi,
+sink_register_control_msg_handler (sink_t *sink,
 	control_action_t action, msg_handler_func func, gpointer data)
 {
 	gint *key = g_malloc0 (sizeof (gint));
@@ -131,24 +131,24 @@ midi_register_control_msg_handler (midi_t *midi,
 
 	*key = action;
 
-	g_hash_table_insert (midi->control_handlers, key, handler);
+	g_hash_table_insert (sink->control_handlers, key, handler);
 }
 
 static void
-handle_control_msg (midi_t *midi, message_t *msg)
+handle_control_msg (sink_t *sink, message_t *msg)
 {
 	msg_handler_t *handler = NULL;
 	control_message_t *cm = (control_message_t*) msg->data;
 	printf ("Got a control msg: action %d \n", cm->action);
 
-	handler = g_hash_table_lookup (midi->control_handlers, &cm->action);
+	handler = g_hash_table_lookup (sink->control_handlers, &cm->action);
 
 	if (handler)
 		handler->func (cm, handler->data);
 }
 
 static void
-handle_event_msg (midi_t *midi, message_t *msg)
+handle_event_msg (sink_t *sink, message_t *msg)
 {
 	return;
 }

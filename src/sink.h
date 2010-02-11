@@ -1,5 +1,5 @@
 /*****************************************************************************
- * midi.h
+ * sink.h: Event sink
  *****************************************************************************
  * Copyright © 2010 Mirsal Ennaime
  * $Id$
@@ -32,21 +32,21 @@
 
 #include <glib.h> 
 
-struct _midi;
-typedef struct _midi midi_t;
+struct _sink;
+typedef struct _sink sink_t;
 
 typedef void (*msg_handler_func) (gpointer msg, gpointer data);
 
-midi_t* midi_init(GAsyncQueue *queue);
-gpointer midi_run(gpointer data);
-void midi_cleanup (midi_t *midi);
+sink_t* sink_init(GAsyncQueue *queue);
+gpointer sink_run(gpointer data);
+void sink_cleanup (sink_t *sink);
 
-void midi_register_control_msg_handler (midi_t *midi,
+void sink_register_control_msg_handler (sink_t *sink,
 	control_action_t action,
 	msg_handler_func func,
 	gpointer data);
 
-void midi_register_event_msg_handler (midi_t *midi,
+void sink_register_event_msg_handler (sink_t *sink,
 	event_type_t event_type,
 	msg_handler_func func,
 	gpointer data);

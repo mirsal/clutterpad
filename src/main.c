@@ -26,7 +26,7 @@
 #endif
 
 #include "ui.h"
-#include "midi.h"
+#include "sink.h"
 
 #include <glib.h>
 #include <stdlib.h>
@@ -35,27 +35,27 @@ int
 main (int argc, char** argv)
 {
 	ui_t *ui = NULL;
-	midi_t *midi = NULL;
-	GThread *midi_thread = NULL;
+	sink_t *sink = NULL;
+	GThread *sink_thread = NULL;
 	GAsyncQueue *queue = NULL;
 
 	g_thread_init (NULL);
 	queue = g_async_queue_new ();
 
-	if (!(midi = midi_init (queue)))
+	if (!(sink = sink_init (queue)))
 		return EXIT_FAILURE;
 
 	if(!(ui = ui_init (queue, &argc, &argv)))
 		 return EXIT_FAILURE;
 
 	g_async_queue_unref (queue);
-	midi_thread = g_thread_create (midi_run, (gpointer) midi, TRUE, NULL);
+	sink_thread = g_thread_create (sink_run, (gpointer) sink, TRUE, NULL);
 
 	ui_run(ui);
-	g_thread_join (midi_thread);
+	g_thread_join (sink_thread);
 
 	ui_cleanup (ui);
-	midi_cleanup (midi);
+	sink_cleanup (sink);
 
 	g_printf ("So long, and thanks for the fish !\n");
 
