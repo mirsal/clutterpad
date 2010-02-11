@@ -52,7 +52,7 @@ sink_t*
 sink_init (GAsyncQueue *queue)
 {
 	sink_t *sink = g_malloc0 (sizeof (sink_t));
-	
+
 	if (!sink) return NULL;
 
 	sink->queue = g_async_queue_ref (queue);

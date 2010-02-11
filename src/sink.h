@@ -30,7 +30,7 @@
 
 #include "message.h"
 
-#include <glib.h> 
+#include <glib.h>
 
 struct _sink;
 typedef struct _sink sink_t;
